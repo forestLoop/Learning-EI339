@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpathes
+from queue import PriorityQueue
 
 
 class MazeProblem:
@@ -113,6 +114,31 @@ class MazeProblem:
         # if no solution found
         return None
 
+    def __future_cost(self, s):
+        return abs(s[0] - self.m + 1) + abs(s[1] - self.n + 1)
+
+    def __A_star(self):
+        parent = {(0, 0): None}
+        cost = {(0, 0): 0}
+        frontier = PriorityQueue()
+        frontier.put((0, (0, 0)))
+        while frontier:
+            current_cost, current = frontier.get()
+            if self.__is_end(current):
+                x = current
+                while(parent[x]):
+                    self.map[x] = 9
+                    x = parent[x]
+                return current_cost
+            for next_grid in self.__next_grid(current):
+                new_cost = cost[current] + 1
+                if next_grid not in cost.keys() or new_cost < cost[next_grid]:
+                    cost[next_grid] = new_cost
+                    parent[next_grid] = current
+                    priority = new_cost + self.__future_cost(next_grid) - self.__future_cost(current)
+                    frontier.put((priority, next_grid))
+        return None
+
     def solve(self, algorithm="BFS"):
         self.map = self.init_map.copy()
         algorithm = algorithm.lower()
@@ -124,4 +150,6 @@ class MazeProblem:
 if __name__ == "__main__":
     Solution = MazeProblem(maze_file='maze.txt')
     Solution.solve("BFS")
+    Solution.drawMap()
+    Solution.solve("A*")
     Solution.drawMap()
