@@ -12,7 +12,7 @@ class MazeProblem:
         self.m, self.n = self.map.shape
         self.algorithms = {
             "bfs": self.__BFS,
-            "a star": self.__A_star,
+            "a_star": self.__A_star,
             "a*": self.__A_star,
         }
         self.min_dist = float("inf")
@@ -41,7 +41,7 @@ class MazeProblem:
         print(rowNum)
         colNum = len(self.map[0])
         print(colNum)
-        ax = plt.subplot()
+        ax = plt.subplot(label=title)
         param = 1
         for col in range(colNum):
             for row in range(rowNum):
@@ -165,7 +165,7 @@ class MazeProblem:
 
 if __name__ == "__main__":
     Solution = MazeProblem(maze_file='maze.txt')
-    algorithms = ["BFS", "A star"]
+    algorithms = ["BFS", "A_star"]
     for algo in algorithms:
         Solution.solve(algo)
         Solution.drawMap(algo)
