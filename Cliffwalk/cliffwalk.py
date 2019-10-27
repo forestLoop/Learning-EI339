@@ -136,7 +136,6 @@ class Sarsa():
 
     def __choose_action(self, state, Q, epsilon):
         all_actions = list(self.__all_actions(state))
-        # print("###", state, all_actions)
         if np.random.random() <= epsilon:  # exploration
             return np.random.choice(all_actions)
         else:  # exploitation
@@ -144,7 +143,6 @@ class Sarsa():
 
     def __take_action(self, state, action):
         new_state = (state[0] + self.STEP[action][0], state[1] + self.STEP[action][1])
-        # print("###", state, action, new_state)
         reward = 0
         if self.__is_terminal(new_state):   # terminal
             reward = 10
@@ -154,31 +152,34 @@ class Sarsa():
             reward = -1
         return new_state, reward
 
-    def learning(self, max_episode_num, gamma=0.9, alpha=0.5, epsilon=0.8):
-        # gamma: the discount factor
+    def learning(self, max_episode_num, gamma=0.9, alpha=0.1, epsilon=0.8):
         # max_episode_num: total episode num
+        # gamma: the discount factor
+        # alpha: learning rate
+        # epsilon: the probability of random choice in epsilon greedy
+
         # Initialize Q(s, a) randomly, except that Q(terminal, *) = 0
-        # Q = np.random.rand(self.rows * self.cols, 4)
         Q = np.zeros((self.rows, self.cols, 4))
         Q[0, self.cols - 1, :] = 0
         # Loop for each episode
+        print("remaining episodes: {:4d}, epsilon: {:.5f}".format(max_episode_num, epsilon))
         while max_episode_num > 0:
             max_episode_num -= 1
+            # Decrease espilon after every 100 episodes
             if max_episode_num % 100 == 0:
-                epsilon /= 1.5
+                epsilon /= 2
+                print("remaining episodes: {:4d}, epsilon: {:.5f}".format(max_episode_num, epsilon))
             state = (0, 0)
             action = self.__choose_action(state, Q, epsilon)
             # Loop until reaching terminal states
             while not self.__is_terminal(state):
                 next_state, reward = self.__take_action(state, action)
-                # print(next_state)
                 next_action = self.__choose_action(next_state, Q, epsilon)
-                # Update Q
                 Q[state][action] += alpha * (reward + gamma * Q[next_state][next_action] - Q[state][action])
                 state, action = next_state, next_action
-            # print("-------")
         print(Q)
         policy = [[None, ] * self.cols for _ in range(self.rows)]
+        # Compute the optimal policy according to Q
         for i in range(self.rows):
             for j in range(self.cols):
                 policy[i][j] = max(self.__all_actions((i, j)), key=lambda x: Q[i, j, x])
@@ -186,12 +187,15 @@ class Sarsa():
 
 
 if __name__ == "__main__":
+    np.random.seed(2019)   # set the random seed for demo
     Env = Environment()
-    print("the environment matrix:")
+    print("The environment matrix:")
     print(Env.env)
     Env.show_env()
+    print("Start SARSA learning.")
     sarsa = Sarsa(Env)
     policy = sarsa.learning(max_episode_num=300, gamma=0.9, alpha=0.1, epsilon=0.8)
+    print("The optimal policy after SARSA learning:")
     print(policy)
     Env.update_path(policy)
     Env.show_env()
