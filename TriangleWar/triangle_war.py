@@ -11,7 +11,7 @@ def check_triangle(remaining_edges, edge):
         flag = True
         while t != 0:
             e = t & (-t)    # the lowest 1 bit in t, i.e., an edge that forms t
-            if e in remaining_edges:    # this edge not added yet
+            if e & remaining_edges:    # this edge not added yet
                 flag = False
                 break
             t -= e
@@ -25,8 +25,11 @@ def alpha_beta_search(remaining_edges, cnt_A, cnt_B, turn_A, alpha=-1, beta=1):
     elif cnt_B >= 5:
         return -1
     if turn_A:
-        for e in remaining_edges:
-            new_remain = {x for x in remaining_edges if x != e}
+        temp = remaining_edges
+        while temp:
+            e = temp & (-temp)
+            temp -= e
+            new_remain = remaining_edges - e
             cnt_diff = check_triangle(new_remain, e)
             if cnt_diff:
                 alpha = max(alpha, alpha_beta_search(new_remain, cnt_A + cnt_diff, cnt_B,
@@ -38,8 +41,11 @@ def alpha_beta_search(remaining_edges, cnt_A, cnt_B, turn_A, alpha=-1, beta=1):
                 return beta
         return alpha
     else:
-        for e in remaining_edges:
-            new_remain = {x for x in remaining_edges if x != e}
+        temp = remaining_edges
+        while temp:
+            e = temp & (-temp)
+            temp -= e
+            new_remain = remaining_edges - e
             cnt_diff = check_triangle(new_remain, e)
             if cnt_diff:
                 beta = min(beta, alpha_beta_search(new_remain, cnt_A, cnt_B + cnt_diff,
@@ -55,13 +61,13 @@ def alpha_beta_search(remaining_edges, cnt_A, cnt_B, turn_A, alpha=-1, beta=1):
 def main():
     n = int(input("number of existing edges:"))
     assert 0 <= n <= 18, "Invalid input!"
-    remaining_edges = set(edge_id.values())
+    remaining_edges = sum(edge_id.values())
     cnt_A, cnt_B = 0, 0
     turn_A = True
     for i in range(n):
         x, y = sorted(map(int, input().split()))
         edge = edge_id[(x, y)]
-        remaining_edges.remove(edge)
+        remaining_edges -= edge
         cnt_diff = check_triangle(remaining_edges, edge)
         if turn_A:
             cnt_A += cnt_diff
